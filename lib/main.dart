@@ -7,8 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:background_fetch/background_fetch.dart';
 
 const EVENTS_KEY = "count";
-const BASE_URL = "https://www.hpb.health.gov.lk/";
-const CURRENT_URL = "$BASE_URL/api/get-current-statistical";
+
 
 /// This "Headless Task" is run when app is terminated.
 void backgroundFetchHeadlessTask(String taskId) async {
@@ -135,7 +134,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _onBackgroundFetch(String taskId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //SharedPreferences prefs = await SharedPreferences.getInstance();
     // DateTime timestamp = new DateTime.now();
     // This is the fetch-event callback.
     print("[BackgroundFetch] Event received: $taskId");
