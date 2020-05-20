@@ -5,13 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:background_fetch/background_fetch.dart';
+import 'package:geolocator/geolocator.dart';
+
+
 
 const EVENTS_KEY = "count";
-const BASE_URL = "https://www.hpb.health.gov.lk/";
-const CURRENT_URL = "$BASE_URL/api/get-current-statistical";
 
 /// This "Headless Task" is run when app is terminated.
 void backgroundFetchHeadlessTask(String taskId) async {
+
+  Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  print(position);
   print("[BackgroundFetch] Headless event received: $taskId");
   
   //function to execute 
@@ -72,6 +76,7 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
+    
     // Load persisted fetch events from SharedPreferences
     // SharedPreferences prefs = await SharedPreferences.getInstance();
     // String json = prefs.getString(EVENTS_KEY);
@@ -99,6 +104,7 @@ class _MyAppState extends State<MyApp> {
         requiredNetworkType: NetworkType.NONE,
     ), _onBackgroundFetch).then((int status) {
       print('[BackgroundFetch] configure success: $status');
+
       // setState(() {
       //   _status = status;
       // });
@@ -135,9 +141,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _onBackgroundFetch(String taskId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    //SharedPreferences prefs = await SharedPreferences.getInstance();
     // DateTime timestamp = new DateTime.now();
     // This is the fetch-event callback.
+    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    print(position);
     print("[BackgroundFetch] Event received: $taskId");
     
     //function to execute 
