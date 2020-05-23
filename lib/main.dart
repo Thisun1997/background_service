@@ -1,34 +1,35 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:background_fetch/background_fetch.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 
-const EVENTS_KEY = "count";
+const EVENTS_KEY = "current_longLat";
 
 /// This "Headless Task" is run when app is terminated.
 void backgroundFetchHeadlessTask(String taskId) async {
-
+  SharedPreferences prefs = await SharedPreferences.getInstance();
   Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
   print(position);
   print("[BackgroundFetch] Headless event received: $taskId");
   
   //function to execute 
-
-  // DateTime timestamp = DateTime.now();
   //count_display = count;
 
   //Read fetch_events from SharedPreferences
-  // List<String> events = [];
-  //String json = prefs.getString(EVENTS_KEY);
-  // if (json != null) {
-  //   events = jsonDecode(json).cast<String>();
-  // }
-  // // Add new event.
-  // events.insert(0, "$taskId@$timestamp [Headless]");
+  List<String> events = [];
+  String json = prefs.getString(EVENTS_KEY);
+  if (json != null) {
+     events = jsonDecode(json).cast<String>();
+   }
+   // Add new event.
+  events.insert(0, "$position [Headless]");
   // // Persist fetch events in SharedPreferences
+  prefs.setString(EVENTS_KEY, jsonEncode(events));
 
   BackgroundFetch.finish(taskId);
 
@@ -62,7 +63,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _enabled = true;
   // int _status = 0;
-  // List<String> _events = [];
+  List<String> _events = [];
 
   @override
   void initState() {
@@ -75,13 +76,21 @@ class _MyAppState extends State<MyApp> {
   Future<void> initPlatformState() async {
     
     // Load persisted fetch events from SharedPreferences
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // String json = prefs.getString(EVENTS_KEY);
-    // if (json != null) {
-    //   setState(() {
-    //     _events = jsonDecode(json).cast<String>();
-    //   });
-    // }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String json = prefs.getString(EVENTS_KEY);
+    if (json != null) {
+       setState(() {
+         _events = jsonDecode(json).cast<String>();
+       });
+     }
+
+    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    print(position);
+    setState(() {
+      _events.insert(0, "${position.toString()}");
+    });
+
+    prefs.setString(EVENTS_KEY, jsonEncode(_events));
 
     // var response = await http.get(CURRENT_URL,headers: {"content-Type":"application/json"});
     // var data = json.decode(response.body);
@@ -138,7 +147,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _onBackgroundFetch(String taskId) async {
-    //SharedPreferences prefs = await SharedPreferences.getInstance();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     // DateTime timestamp = new DateTime.now();
     // This is the fetch-event callback.
     Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
@@ -147,11 +156,11 @@ class _MyAppState extends State<MyApp> {
     
     //function to execute 
     
-    // setState(() {
-    //   _events.insert(0, "$taskId@${timestamp.toString()}");
-    // });
+    setState(() {
+      _events.insert(0, "${position.toString()}");
+    });
     // // Persist fetch events in SharedPreferences
-    // prefs.setString(EVENTS_KEY, jsonEncode(_events));
+    prefs.setString(EVENTS_KEY, jsonEncode(_events));
     
     // if (taskId == "flutter_background_fetch") {
     //   // Schedule a one-shot task when fetch event received (for testing).
@@ -203,7 +212,7 @@ class _MyAppState extends State<MyApp> {
   // }
   @override
   Widget build(BuildContext context) {
-    //const EMPTY_TEXT = Center(child: Text('Waiting for fetch events.  Simulate one.\n [Android] \$ ./scripts/simulate-fetch\n [iOS] XCode->Debug->Simulate Background Fetch'));
+    const EMPTY_TEXT = Center(child: Text('Waiting for fetch events.  Simulate one.\n [Android] \$ ./scripts/simulate-fetch\n [iOS] XCode->Debug->Simulate Background Fetch'));
 
     return new MaterialApp(
       home: new Scaffold(
@@ -220,22 +229,20 @@ class _MyAppState extends State<MyApp> {
         //     Text('$count_display')
         //   ],)
         // )
-        // body: (_events.isEmpty) ? EMPTY_TEXT : Container(
-        //   child: new ListView.builder(
-        //       itemCount: _events.length,
-        //       itemBuilder: (BuildContext context, int index) {
-        //         List<String> event = _events[index].split("@");
-        //         return InputDecorator(
-        //             decoration: InputDecoration(
-        //                 contentPadding: EdgeInsets.only(left: 5.0, top: 5.0, bottom: 5.0),
-        //                 labelStyle: TextStyle(color: Colors.blue, fontSize: 20.0),
-        //                 labelText: "[${event[0].toString()}]"
-        //             ),
-        //             child: new Text(event[1], style: TextStyle(color: Colors.black, fontSize: 16.0))
-        //         );
-        //       }
-        //   ),
-        // ),
+        body: (_events.isEmpty) ? EMPTY_TEXT : Container(
+          child: new ListView.builder(
+               itemCount: _events.length,
+              itemBuilder: (BuildContext context, int index) {
+                return InputDecorator(
+                    decoration: InputDecoration(
+                        contentPadding: EdgeInsets.only(left: 5.0, top: 5.0, bottom: 5.0),
+                        labelStyle: TextStyle(color: Colors.blue, fontSize: 20.0),
+                        labelText: "[${_events[index].toString()}]"
+                    ),
+                );
+              }
+          ),
+        ),
         // bottomNavigationBar: BottomAppBar(
         //   child: Container(
         //     padding: EdgeInsets.only(left: 5.0, right:5.0),
