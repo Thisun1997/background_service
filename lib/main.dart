@@ -27,6 +27,9 @@ void backgroundFetchHeadlessTask(String taskId) async {
      events = jsonDecode(json).cast<String>();
    }
    // Add new event.
+  if(events.length == 2){
+    events.removeLast();
+  }
   events.insert(0, "$position [Headless]");
   // // Persist fetch events in SharedPreferences
   prefs.setString(EVENTS_KEY, jsonEncode(events));
@@ -87,6 +90,9 @@ class _MyAppState extends State<MyApp> {
     Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     print(position);
     setState(() {
+      if(_events.length == 2){
+        _events.removeLast();
+      }
       _events.insert(0, "${position.toString()}");
     });
 
@@ -157,6 +163,9 @@ class _MyAppState extends State<MyApp> {
     //function to execute 
     
     setState(() {
+      if(_events.length == 2){
+        _events.removeLast();
+      }
       _events.insert(0, "${position.toString()}");
     });
     // // Persist fetch events in SharedPreferences
